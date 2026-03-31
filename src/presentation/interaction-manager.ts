@@ -16,14 +16,14 @@ export interface Choice {
 
 // const expenseTypes: Choice[] = [{ label: "Food", value: "FOOD" }];
 
-export const initialiseInteractionManager = () => {
+export const openInterractionManager = () => {
   const rl = readline.createInterface({ input, output });
   const ask: (
     question: string,
-    options: AskOptions,
+    options?: AskOptions,
   ) => Promise<undefined | string> = async (
     question: string,
-    options: AskOptions,
+    options?: AskOptions,
   ) => {
     const { defaultAnswer, validator } = options || {};
     return new Promise((resolve) => {
