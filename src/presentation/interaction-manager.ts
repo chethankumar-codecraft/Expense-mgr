@@ -1,10 +1,10 @@
-const readline = require("node:readline");
-// import * as readline from "node:readline";
-const { stdin: input, stdout: output } = require("node:process");
+import type { ValidatorFn } from "../core/validators/validator.type.ts";
+import * as readline from "node:readline";
+import { stdin as input, stdout as output } from "node:process";
 
 export interface AskOptions {
   defaultAnswer?: string | undefined;
-  validator?: ((s: string) => boolean) | undefined;
+  validator?: ValidatorFn | undefined;
 }
 
 export interface Choice {
@@ -31,7 +31,7 @@ export const openInterractionManager = () => {
         question + `${defaultAnswer ? "(" + defaultAnswer + ")" : ""}`,
         (answer: string) => {
           if (validator && !validator(answer)) {
-            console.log("Invalid");
+            console.log("Invalid input");
             resolve(ask(question, { defaultAnswer, validator }));
           }
           resolve(answer || defaultAnswer);
@@ -52,7 +52,7 @@ export const openInterractionManager = () => {
     choices.forEach((choice) => {
       console.log(`${choice.value}. ${choice.label}`);
     });
-    const choice = await ask("Please your choice", {
+    const choice = await ask("Please your choice :", {
       validator: (input) => {
         if (optional && input.trim()) return true;
         return choices.some((choice) => choice.value === input);
@@ -70,32 +70,3 @@ export const openInterractionManager = () => {
     close,
   };
 };
-
-// const run = async () => {
-//   console.log(
-//     "---------------WELCOME TO SPLIT EXPENSE DASHBOARD------------------",
-//   );
-//   while (true) {
-//     const prompt =
-//       "\n Options:\n\t1. Add New friend\n\t2. Show my friends\n\t3. Exit\nYour choice: ";
-//     const choice = await ask(prompt, {
-//       defaultAnswer: undefined,
-//       validator: undefined,
-//     });
-
-//     switch (choice) {
-//       case "1":
-//         // await AddFriend();
-//         break;
-//       case "2":
-//         // showFriends();
-//         break;
-//       case "3":
-//         console.log("Thank you, Goodbye!");
-//         rl.close();
-//         return;
-//     }
-//   }
-// };
-
-// run();

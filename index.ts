@@ -1,10 +1,9 @@
-import { openInterractionManager } from "./src/presentation/interaction-manager.js";
-import { manageFreinds } from "./src/presentation/friends-manager.js";
-
-
+import { openInterractionManager } from "./src/presentation/interaction-manager.ts";
+import { manageFreinds } from "./src/presentation/friends-manager.ts";
 
 const run = async () => {
   const { ask, choose, close } = openInterractionManager();
-
   manageFreinds();
 };
+
+run();
