@@ -1,9 +1,10 @@
-import type { Friend } from "../models/friend.model.ts";
-import { FriendsController } from "../controllers/friends.controller.ts";
-import { emailValidator } from "../core/validators/email.validator.ts";
-import { phoneValidator } from "../core/validators/phone.validator.ts";
-import { type Choice, openInterractionManager } from "./interaction-manager.ts";
-import { numberValidator } from "../core/validators/number.validator.ts";
+import type { Friend } from "../models/friend.model.js";
+import { FriendsController } from "../controllers/friends.controller.js";
+import { emailValidator } from "../core/validators/email.validator.js";
+import { phoneValidator } from "../core/validators/phone.validator.js";
+import { type Choice, openInterractionManager } from "./interaction-manager.js";
+import { numberValidator } from "../core/validators/number.validator.js";
+import { notEmpty } from "../core/validators/notemptyString.validator.js";
 const options: Choice[] = [
   { label: "Add Friend", value: "1" },
   { label: "Search Friend", value: "2" },
@@ -13,8 +14,8 @@ const options: Choice[] = [
 ];
 
 const { ask, choose, close } = openInterractionManager();
-
-const AddFriend = async () => {
+const friendController = new FriendsController();
+const addFriend = async () => {
   const name = await ask(`Enter friend's name :`, {
     defaultAnswer: "newFriend",
   });
@@ -30,14 +31,112 @@ const AddFriend = async () => {
   );
 
   const friend: Friend = {
-    id: Date.now.toString(),
+    id: Date.now().toString(),
     name: name!,
     email: email,
     phone: phone,
     balance: Number(balance),
   };
-  const friendController = new FriendsController();
   friendController.addFriend(friend);
+};
+
+const searchFriend = async () => {
+  const searchDetail = await ask(
+    `Enter the Friend's name OR phone number OR email to search`,
+    { defaultAnswer: "" },
+  );
+  let offset = 0;
+  let limit = 5;
+  while (true) {
+    const list = friendController.searchFriend(searchDetail!, {
+      offset: offset,
+      limit: limit,
+    });
+    if (!list) return;
+
+    console.table(list.data);
+    const currentPage = Math.floor(offset / limit) + 1;
+    const totalPages = Math.ceil(list.matched / limit);
+
+    console.log(`Page: ${currentPage} / ${totalPages}`);
+    const navigation: Choice[] = [
+      { label: "NEXT", value: "1" },
+      { label: "PREV", value: "2" },
+      { label: "GO TO HOME PAGE", value: "3" },
+    ];
+    const navTo = await choose(`What do you want to do?`, navigation, false);
+    switch (navTo?.value) {
+      case "1": {
+        if (offset + limit < list.matched) {
+          offset += limit;
+        }
+        break;
+      }
+      case "2": {
+        offset = Math.max(offset - limit, 0);
+        break;
+      }
+      case "3": {
+        return;
+      }
+    }
+  }
+};
+
+const updateFriend = async () => {
+  const personIdOrName = await ask(`Enter the friend ID OR name to update: `, {
+    validator: notEmpty,
+  });
+
+  const friend = friendController.updateFriend(personIdOrName!);
+  if (!friend) return;
+
+  console.log("Just Press Enter if you don't want to  edit :");
+  const name = await ask(`Enter friend's name :`, {
+    defaultAnswer: friend.name,
+  });
+  const email = await ask(`Enter friend's email :`, {
+    validator: emailValidator,
+    defaultAnswer: friend.email,
+  });
+  const phone = await ask(`Enter friend's phone number :`, {
+    validator: phoneValidator,
+    defaultAnswer: friend.phone,
+  });
+  const balance = await ask(
+    `Enter the initial balance (+ve means they owe you, -ve means you owe them) :`,
+    { validator: numberValidator, defaultAnswer: String(friend.balance) },
+  );
+
+  const updatedDetail: Friend = {
+    id: friend.id,
+    name: name!,
+    email: email,
+    phone: phone,
+    balance: Number(balance),
+  };
+
+  const result = friendController.updateFriend(personIdOrName!, updatedDetail);
+  console.log(`Updated the ${result?.name} Details:`);
+  console.table(result);
+};
+
+const removeFriend = async () => {
+  const personIdOrName = await ask(`Enter the friend ID OR name to update: `, {
+    validator: notEmpty,
+  });
+
+  const result = friendController.removeFriend(personIdOrName!);
+  if (result) {
+    if (result.balance !== 0) {
+      const confirm = await ask("Are you still want to delete? (y/n)");
+      if (confirm === "y") friendController.removeFriend(personIdOrName!, true);
+      else return;
+    }
+    console.table(result);
+    console.log(`This User is deleted from the Friend list`);
+    return;
+  }
 };
 
 export const manageFreinds = async () => {
@@ -47,21 +146,24 @@ export const manageFreinds = async () => {
     switch (choice!.value) {
       case "1":
         console.log("Adding friend..");
-        await AddFriend();
+        await addFriend();
         break;
       case "2":
         console.log("Searching friend..");
+        await searchFriend();
         break;
       case "3":
         console.log("Updating friend..");
+        await updateFriend();
         break;
       case "4":
         console.log("Removing friend..");
+        await removeFriend();
         break;
       case "5":
         console.log("Exiting...");
         close();
-        break;
+        return;
     }
   }
 };

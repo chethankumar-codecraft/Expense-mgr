@@ -1,5 +1,6 @@
-import type { Friend } from "../models/friend.model.ts";
-import { FriendsRepository } from "../repositories/friends.repository.ts";
+import type { Friend } from "../models/friend.model.js";
+import { FriendsRepository } from "../repositories/friends.repository.js";
+import { type PageOptions } from "../core/pagination.types.js";
 export class FriendsController {
   checkEmailExists(email: string) {
     if (FriendsRepository.getInstance().findFriendByEmail(email)) return false; //not already exist
@@ -34,8 +35,42 @@ export class FriendsController {
       console.log("Adding friend Failed");
       return;
     }
-    FriendsRepository.getInstance().addFriend(friend);
-
     console.log("Adding friend to database...", friend);
+    FriendsRepository.getInstance().addFriend(friend);
+  }
+
+  //search
+  searchFriend(input: string, pageOptions: PageOptions) {
+    if (!FriendsRepository.getInstance()) {
+      console.log("Searching friend Failed");
+      return;
+    }
+    console.log("Searching friend in database...", input);
+    return FriendsRepository.getInstance().searchFriends(input, pageOptions);
+  }
+
+  //update
+  updateFriend(personIdOrName: string, updatedDetail?: Friend) {
+    if (!FriendsRepository.getInstance()) {
+      console.log("Updating friend detail Failed");
+      return;
+    }
+    console.log("Updating friend deatils in database...", personIdOrName);
+    return FriendsRepository.getInstance().updateFriend(
+      personIdOrName,
+      updatedDetail,
+    );
+  }
+
+  //remove
+  removeFriend(personIdOrName: string, forcible: boolean = false) {
+    if (!FriendsRepository.getInstance()) {
+      console.log("Updating friend detail Failed");
+      return;
+    }
+    return FriendsRepository.getInstance().removeFriend(
+      personIdOrName,
+      forcible,
+    );
   }
 }

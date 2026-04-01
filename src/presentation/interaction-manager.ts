@@ -1,4 +1,4 @@
-import type { ValidatorFn } from "../core/validators/validator.type.ts";
+import type { ValidatorFn } from "../core/validators/validator.type.js";
 import * as readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 
@@ -32,7 +32,7 @@ export const openInterractionManager = () => {
         (answer: string) => {
           if (validator && !validator(answer)) {
             console.log("Invalid input");
-            resolve(ask(question, { defaultAnswer, validator }));
+            return resolve(ask(question, { defaultAnswer, validator }));
           }
           resolve(answer || defaultAnswer);
         },
