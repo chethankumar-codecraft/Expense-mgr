@@ -1,5 +1,5 @@
-import type { Friend } from "../models/friend.model.ts";
-import type { PageOptions, PageResult } from "../core/pagination.types.ts";
+import type { Friend } from "../models/friend.model.js";
+import type { PageOptions, PageResult } from "../core/pagination.types.js";
 export class FriendsRepository {
   private static instance: FriendsRepository;
   private friends: Friend[] = [];
@@ -27,6 +27,9 @@ export class FriendsRepository {
   findFriendById(id: string) {
     return this.friends.find((friend) => friend.id === id);
   }
+  findFriendByName(name: string) {
+    return this.friends.find((friend) => friend.name === name);
+  }
 
   searchFriends(query: string, pageOptions?: PageOptions): PageResult<Friend> {
     if (this.friends.length === 0) {
@@ -41,22 +44,32 @@ export class FriendsRepository {
       );
     });
 
-      return {
-        data: filtered.slice(
-          pageOptions?.offset || 0,
-          (pageOptions?.offset || 0) + (pageOptions?.limit || 5),
-        ),
-        matched: filtered.length,
-        total: this.friends.length,
-      };
+    return {
+      data: filtered.slice(
+        pageOptions?.offset || 0,
+        (pageOptions?.offset || 0) + (pageOptions?.limit || 5),
+      ),
+      matched: filtered.length,
+      total: this.friends.length,
+    };
   }
 
-  updateFriend(id: string) {
-    const friend = this.findFriendById(id);
-    if (friend) {
-      console.log(`Friend with id ${id} not exist in the friend list`);
+  updateFriend(personIdOrName: string, updatedDetails?: Friend) {
+    const friendObj =
+      this.findFriendById(personIdOrName) ||
+      this.findFriendByName(personIdOrName);
+    if (!friendObj) {
+      console.log(
+        `Friend with id or Name ${personIdOrName} not exist in the friend list`,
+      );
       return;
     }
-    return friend;
+    if (!updatedDetails) return friendObj;
+    friendObj.name = updatedDetails.name;
+    friendObj.balance = updatedDetails.balance;
+    friendObj.email = updatedDetails.email;
+    friendObj.id = updatedDetails.id;
+    friendObj.phone = updatedDetails.phone;
+    return friendObj;
   }
 }

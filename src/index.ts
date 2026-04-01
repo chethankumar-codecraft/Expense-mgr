@@ -1,5 +1,4 @@
-import { openInterractionManager } from "./presentation/interaction-manager.ts";
-import { manageFreinds } from "./presentation/friends-manager.ts";
+import { manageFreinds } from "./presentation/friends-manager.js";
 
 const run = async () => {
   manageFreinds();

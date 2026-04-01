@@ -1,10 +1,10 @@
-import type { Friend } from "../models/friend.model.ts";
-import { FriendsController } from "../controllers/friends.controller.ts";
-import { emailValidator } from "../core/validators/email.validator.ts";
-import { phoneValidator } from "../core/validators/phone.validator.ts";
-import { type Choice, openInterractionManager } from "./interaction-manager.ts";
-import { numberValidator } from "../core/validators/number.validator.ts";
-import { notEmpty } from "../core/validators/notemptyString.validator.ts";
+import type { Friend } from "../models/friend.model.js";
+import { FriendsController } from "../controllers/friends.controller.js";
+import { emailValidator } from "../core/validators/email.validator.js";
+import { phoneValidator } from "../core/validators/phone.validator.js";
+import { type Choice, openInterractionManager } from "./interaction-manager.js";
+import { numberValidator } from "../core/validators/number.validator.js";
+import { notEmpty } from "../core/validators/notemptyString.validator.js";
 const options: Choice[] = [
   { label: "Add Friend", value: "1" },
   { label: "Search Friend", value: "2" },
@@ -53,7 +53,12 @@ const searchFriend = async () => {
       limit: limit,
     });
     if (!list) return;
+
     console.table(list.data);
+    const currentPage = Math.floor(offset / limit) + 1;
+    const totalPages = Math.ceil(list.matched / limit);
+
+    console.log(`Page: ${currentPage} / ${totalPages}`);
     const navigation: Choice[] = [
       { label: "NEXT", value: "1" },
       { label: "PREV", value: "2" },
@@ -62,21 +67,13 @@ const searchFriend = async () => {
     const navTo = await choose(`What do you want to do?`, navigation, false);
     switch (navTo?.value) {
       case "1": {
-        if (offset < list.matched - 5) offset += 5;
-        if (limit < list.matched) limit += 5;
-        friendController.searchFriend(searchDetail!, {
-          offset: offset,
-          limit: limit,
-        });
+        if (offset + limit < list.matched) {
+          offset += limit;
+        }
         break;
       }
       case "2": {
-        if (offset - 5 >= 0) offset -= 5;
-        if (limit - 5 >= 5) limit -= 5;
-        friendController.searchFriend(searchDetail!, {
-          offset: offset,
-          limit: limit,
-        });
+        offset = Math.max(offset - limit, 0);
         break;
       }
       case "3": {
@@ -86,26 +83,43 @@ const searchFriend = async () => {
   }
 };
 
-// const updateFriend = async () => {
-//   const updateBy: Choice[] = [
-//     { label: "By ID", value: "1" },
-//     { label: "By Name", value: "2" },
-//     { label: "By Email", value: "3" },
-//     { label: "By Phone number", value: "4" },
-//     { label: "Cancel update", value: "5" },
-//   ];
-//   const updateChoice = await choose(
-//     `How do you want to find the friend? :`,
-//     updateBy,
-//     false,
-//   );
-//   switch(updateChoice?.value)
-//   {
-//     case '1':
-//   }
+const updateFriend = async () => {
+  const personIdOrName = await ask(`Enter the friend ID OR name to update: `, {
+    validator: notEmpty,
+  });
 
-//   const friend = friendController.updateFriend(personId!);
-// };
+  const friend = friendController.updateFriend(personIdOrName!);
+  if (!friend) return;
+
+  console.log("Just Press Enter if you don't want to  edit :");
+  const name = await ask(`Enter friend's name :`, {
+    defaultAnswer: friend.name,
+  });
+  const email = await ask(`Enter friend's email :`, {
+    validator: emailValidator,
+    defaultAnswer: friend.email,
+  });
+  const phone = await ask(`Enter friend's phone number :`, {
+    validator: phoneValidator,
+    defaultAnswer: friend.phone,
+  });
+  const balance = await ask(
+    `Enter the initial balance (+ve means they owe you, -ve means you owe them) :`,
+    { validator: numberValidator, defaultAnswer: String(friend.balance) },
+  );
+
+  const updatedDetail: Friend = {
+    id: friend.id,
+    name: name!,
+    email: email,
+    phone: phone,
+    balance: Number(balance),
+  };
+
+  const result = friendController.updateFriend(personIdOrName!, updatedDetail);
+  console.log(`Updated the ${result?.name} Details:`);
+  console.table(result);
+};
 export const manageFreinds = async () => {
   while (true) {
     const choice = await choose("What do you want to do?", options, false);
@@ -121,9 +135,11 @@ export const manageFreinds = async () => {
         break;
       case "3":
         console.log("Updating friend..");
+        await updateFriend();
         break;
       case "4":
         console.log("Removing friend..");
+        // await removeFriend();
         break;
       case "5":
         console.log("Exiting...");

@@ -1,6 +1,6 @@
-import type { Friend } from "../models/friend.model.ts";
-import { FriendsRepository } from "../repositories/friends.repository.ts";
-import { type PageOptions } from "../core/pagination.types.ts";
+import type { Friend } from "../models/friend.model.js";
+import { FriendsRepository } from "../repositories/friends.repository.js";
+import { type PageOptions } from "../core/pagination.types.js";
 export class FriendsController {
   checkEmailExists(email: string) {
     if (FriendsRepository.getInstance().findFriendByEmail(email)) return false; //not already exist
@@ -50,12 +50,12 @@ export class FriendsController {
   }
 
   //update
-  updateFriend(id: string) {
+  updateFriend(personIdOrName: string, updatedDetail?: Friend) {
     if (!FriendsRepository.getInstance()) {
       console.log("Updating friend detail Failed");
       return;
     }
-    console.log("Updating friend deatils in database...", id);
-    return FriendsRepository.getInstance().updateFriend(id);
+    console.log("Updating friend deatils in database...", personIdOrName);
+    return FriendsRepository.getInstance().updateFriend(personIdOrName, updatedDetail);
   }
 }

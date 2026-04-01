@@ -1,4 +1,4 @@
-import type { ValidatorFn } from "../core/validators/validator.type.ts";
+import type { ValidatorFn } from "../core/validators/validator.type.js";
 import * as readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 
