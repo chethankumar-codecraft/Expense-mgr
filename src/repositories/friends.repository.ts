@@ -24,21 +24,39 @@ export class FriendsRepository {
   findFriendByPhone(phone: string) {
     return this.friends.find((friend) => friend.phone === phone);
   }
+  findFriendById(id: string) {
+    return this.friends.find((friend) => friend.id === id);
+  }
 
   searchFriends(query: string, pageOptions?: PageOptions): PageResult<Friend> {
+    if (this.friends.length === 0) {
+      console.log("No friends exists");
+    }
     const lowerQuery = query.toLowerCase();
     const filtered = this.friends.filter((friend) => {
-      friend.name.toLowerCase().includes(lowerQuery) ||
+      return (
+        friend.name.toLowerCase().includes(lowerQuery) ||
         friend.email?.toLowerCase().includes(lowerQuery) ||
-        friend.phone?.toLowerCase().includes(lowerQuery);
+        friend.phone?.toLowerCase().includes(lowerQuery)
+      );
     });
-    return {
-      data: filtered.slice(
-        pageOptions?.offset || 0,
-        (pageOptions?.offset || 0) + (pageOptions?.limit || 5),
-      ),
-      matched: filtered.length,
-      total: this.friends.length,
-    };
+
+      return {
+        data: filtered.slice(
+          pageOptions?.offset || 0,
+          (pageOptions?.offset || 0) + (pageOptions?.limit || 5),
+        ),
+        matched: filtered.length,
+        total: this.friends.length,
+      };
+  }
+
+  updateFriend(id: string) {
+    const friend = this.findFriendById(id);
+    if (friend) {
+      console.log(`Friend with id ${id} not exist in the friend list`);
+      return;
+    }
+    return friend;
   }
 }

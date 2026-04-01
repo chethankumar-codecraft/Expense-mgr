@@ -32,7 +32,7 @@ export const openInterractionManager = () => {
         (answer: string) => {
           if (validator && !validator(answer)) {
             console.log("Invalid input");
-            resolve(ask(question, { defaultAnswer, validator }));
+            return resolve(ask(question, { defaultAnswer, validator }));
           }
           resolve(answer || defaultAnswer);
         },
