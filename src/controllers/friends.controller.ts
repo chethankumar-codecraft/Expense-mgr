@@ -56,6 +56,21 @@ export class FriendsController {
       return;
     }
     console.log("Updating friend deatils in database...", personIdOrName);
-    return FriendsRepository.getInstance().updateFriend(personIdOrName, updatedDetail);
+    return FriendsRepository.getInstance().updateFriend(
+      personIdOrName,
+      updatedDetail,
+    );
+  }
+
+  //remove
+  removeFriend(personIdOrName: string, forcible: boolean = false) {
+    if (!FriendsRepository.getInstance()) {
+      console.log("Updating friend detail Failed");
+      return;
+    }
+    return FriendsRepository.getInstance().removeFriend(
+      personIdOrName,
+      forcible,
+    );
   }
 }

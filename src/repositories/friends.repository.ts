@@ -72,4 +72,24 @@ export class FriendsRepository {
     friendObj.phone = updatedDetails.phone;
     return friendObj;
   }
+
+  removeFriend(personIdOrName: string, forcible: boolean) {
+    const removePerson =
+      this.findFriendById(personIdOrName) ||
+      this.findFriendByName(personIdOrName);
+    if (!removePerson) {
+      console.log(
+        `Friend with id or Name ${personIdOrName} not exist in the friend list`,
+      );
+      return;
+    }
+    if (removePerson.balance !== 0 && !forcible) {
+      console.log(`You cannot delete this person before settlement`);
+    } else {
+      this.friends = this.friends.filter((friend) => {
+        return friend.id !== personIdOrName && friend.name !== personIdOrName;
+      });
+    }
+    return removePerson;
+  }
 }

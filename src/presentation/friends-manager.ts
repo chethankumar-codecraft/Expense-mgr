@@ -120,6 +120,25 @@ const updateFriend = async () => {
   console.log(`Updated the ${result?.name} Details:`);
   console.table(result);
 };
+
+const removeFriend = async () => {
+  const personIdOrName = await ask(`Enter the friend ID OR name to update: `, {
+    validator: notEmpty,
+  });
+
+  const result = friendController.removeFriend(personIdOrName!);
+  if (result) {
+    if (result.balance !== 0) {
+      const confirm = await ask("Are you still want to delete? (y/n)");
+      if (confirm === "y") friendController.removeFriend(personIdOrName!, true);
+      else return;
+    }
+    console.table(result);
+    console.log(`This User is deleted from the Friend list`);
+    return;
+  }
+};
+
 export const manageFreinds = async () => {
   while (true) {
     const choice = await choose("What do you want to do?", options, false);
@@ -139,12 +158,12 @@ export const manageFreinds = async () => {
         break;
       case "4":
         console.log("Removing friend..");
-        // await removeFriend();
+        await removeFriend();
         break;
       case "5":
         console.log("Exiting...");
         close();
-        break;
+        return;
     }
   }
 };
