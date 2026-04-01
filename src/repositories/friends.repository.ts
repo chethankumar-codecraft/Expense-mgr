@@ -1,5 +1,5 @@
-import type { Friend } from "../models/friend.model.js";
-import type { PageOptions, PageResult } from "../core/pagination.types.js";
+import type { Friend } from "../models/friend.model.ts";
+import type { PageOptions, PageResult } from "../core/pagination.types.ts";
 export class FriendsRepository {
   private static instance: FriendsRepository;
   private friends: Friend[] = [];
@@ -21,15 +21,16 @@ export class FriendsRepository {
   findFriendByEmail(email: string) {
     return this.friends.find((friend) => friend.email === email);
   }
-  //   findFriendByPhone(email: string) {
-  //     return this.friends.find((friend) => friend.email === email);
-  //   }
+  findFriendByPhone(phone: string) {
+    return this.friends.find((friend) => friend.phone === phone);
+  }
 
   searchFriends(query: string, pageOptions?: PageOptions): PageResult<Friend> {
     const lowerQuery = query.toLowerCase();
     const filtered = this.friends.filter((friend) => {
       friend.name.toLowerCase().includes(lowerQuery) ||
-        friend.email.toLowerCase().includes(lowerQuery);
+        friend.email?.toLowerCase().includes(lowerQuery) ||
+        friend.phone?.toLowerCase().includes(lowerQuery);
     });
     return {
       data: filtered.slice(
