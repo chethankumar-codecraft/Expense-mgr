@@ -5,6 +5,8 @@ import { phoneValidator } from "../core/validators/phone.validator.js";
 import { type Choice, openInterractionManager } from "./interaction-manager.js";
 import { numberValidator } from "../core/validators/number.validator.js";
 import { notEmpty } from "../core/validators/notemptyString.validator.js";
+import { ConflictError } from "../core/errors/conflict.error.js";
+import { DBconnection } from "../core/errors/DBconnection.error.js";
 const options: Choice[] = [
   { label: "Add Friend", value: "1" },
   { label: "Search Friend", value: "2" },
@@ -16,28 +18,76 @@ const options: Choice[] = [
 const { ask, choose, close } = openInterractionManager();
 const friendController = new FriendsController();
 const addFriend = async () => {
-  const name = await ask(`Enter friend's name :`, {
-    defaultAnswer: "newFriend",
-  });
-  const email = await ask(`Enter friend's email :`, {
-    validator: emailValidator,
-  });
-  const phone = await ask(`Enter friend's phone number :`, {
-    validator: phoneValidator,
-  });
-  const balance = await ask(
-    `Enter the initial balance (+ve means they owe you, -ve means you owe them) :`,
-    { validator: numberValidator, defaultAnswer: "0" },
-  );
-
-  const friend: Friend = {
+  const friendFormData = {
     id: Date.now().toString(),
-    name: name!,
-    email: email,
-    phone: phone,
-    balance: Number(balance),
+    name: "",
+    email: "",
+    phone: "",
+    balance: null as number | null,
+    address: "",
   };
-  friendController.addFriend(friend);
+
+  const showFriendForm = async () => {
+    try {
+      if (friendFormData.name === "") {
+        friendFormData.name =
+          (await ask(`Enter friend's name :`, {
+            defaultAnswer: "",
+            validator: notEmpty,
+          })) || "";
+      }
+      if (friendFormData.email === "") {
+        friendFormData.email =
+          (await ask(`Enter friend's email :`, {
+            validator: emailValidator,
+            defaultAnswer: "",
+          })) || "";
+      }
+      if (friendFormData.phone === "") {
+        friendFormData.phone =
+          (await ask(`Enter friend's phone number :`, {
+            validator: phoneValidator,
+            defaultAnswer: "",
+          })) || "";
+      }
+      if (friendFormData.balance === null) {
+        friendFormData.balance =
+          Number(
+            await ask(
+              `Enter the initial balance (+ve means they owe you, -ve means you owe them) :`,
+              { validator: numberValidator, defaultAnswer: "0" },
+            ),
+          ) || 0;
+      }
+      if (friendFormData.address === "") {
+        friendFormData.address =
+          (await ask("Enter the address of your friend: ", {
+            defaultAnswer: "",
+          })) || "";
+      }
+
+      friendController.addFriend(friendFormData as Friend);
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        console.log(`${err.conflictMessage} :`, err.conflictProperties);
+        err.conflictProperties.forEach((field) => {
+          if (field === "balance") {
+            friendFormData.balance = null;
+          } else {
+            friendFormData[
+              field as Exclude<keyof typeof friendFormData, "balance">
+            ] = "";
+          }
+        });
+        await showFriendForm();
+      } else if (err instanceof DBconnection) {
+        console.error(err);
+      } else {
+        throw err;
+      }
+    }
+  };
+  return await showFriendForm();
 };
 
 const searchFriend = async () => {
@@ -108,12 +158,16 @@ const updateFriend = async () => {
     { validator: numberValidator, defaultAnswer: String(friend.balance) },
   );
 
+  const address = await ask("Enter the address of your friend: ", {
+    defaultAnswer: friend.address,
+  });
   const updatedDetail: Friend = {
     id: friend.id,
     name: name!,
-    email: email,
-    phone: phone,
+    email: email!,
+    phone: phone!,
     balance: Number(balance),
+    address: address!,
   };
 
   const result = friendController.updateFriend(personIdOrName!, updatedDetail);

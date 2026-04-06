@@ -1,5 +1,6 @@
 import type { Friend } from "../models/friend.model.js";
 import type { PageOptions, PageResult } from "../core/pagination.types.js";
+import { AppDBManager } from "../models/db-manager.js";
 export class FriendsRepository {
   private static instance: FriendsRepository;
   private friends: Friend[] = [];
@@ -11,10 +12,15 @@ export class FriendsRepository {
     return FriendsRepository.instance;
   }
 
-  private constructor() {}
+  private constructor() {
+    this.friends = AppDBManager.getInstance()
+      .getDB()
+      .table("friends") as Friend[];
+  }
 
   addFriend(friend: Friend) {
     this.friends.push(friend);
+    AppDBManager.getInstance().save();
     console.log("Friend added to repository");
   }
 
