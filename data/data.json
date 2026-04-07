@@ -1,12 +1,84 @@
 {
   "friends": [
     {
-      "id": "1775477805694",
-      "name": "CK",
-      "email": "",
-      "phone": "",
+      "id": "1775539963341",
+      "name": "Chethan",
+      "email": "c@gmail.com",
+      "phone": "1111111111",
       "balance": 0,
-      "address": ""
+      "address": "mangalore"
+    },
+    {
+      "id": "1775539983280",
+      "name": "Pradeep",
+      "email": "p@gmail.com",
+      "phone": "2222222222",
+      "balance": 0,
+      "address": "mangalore"
+    },
+    {
+      "id": "1775540053488",
+      "name": "Codecraft",
+      "email": "code@gmail.com",
+      "phone": "7777777777",
+      "balance": 90,
+      "address": "bangalore"
+    },
+    {
+      "id": "1775548274471",
+      "name": "d",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775550024882",
+      "name": "s",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775550861310",
+      "name": "w",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775551093370",
+      "name": "d",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775551134418",
+      "name": "w",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775551220274",
+      "name": "3",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775564445072",
+      "name": "CK",
+      "email": "s@gmail.com",
+      "phone": "1234567890",
+      "balance": 0,
+      "address": "s"
     }
   ]
 }

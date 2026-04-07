@@ -85,7 +85,6 @@ export class Database<T extends { [K in keyof T]: Table }> {
 
   async save() {
     try {
-      console.log("Saving in DB...");
 
       await fs.promises.writeFile(
         this.filePath,

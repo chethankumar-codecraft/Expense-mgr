@@ -3,44 +3,36 @@ import { FriendsRepository } from "../repositories/friends.repository.js";
 import { type PageOptions } from "../core/pagination.types.js";
 import { ConflictError } from "../core/errors/conflict.error.js";
 import { DBconnection } from "../core/errors/DBconnection.error.js";
+import { displayTable } from "../core/consts/displayTable.js";
 export class FriendsController {
+  private repo = FriendsRepository.getInstance();
   checkEmailExists(email: string) {
-    if (FriendsRepository.getInstance().findFriendByEmail(email)) return false; //not already exist
-    return true;
+    return this.repo.findFriendByEmail(email) !== undefined;
   }
-
   checkPhoneExists(phone: string) {
-    if (FriendsRepository.getInstance().findFriendByPhone(phone)) return false; //not already exist
-    return true;
+    return this.repo.findFriendByPhone(phone) !== undefined;
   }
   checkNameExists(name: string) {
-    if (FriendsRepository.getInstance().findFriendByName(name)) return false; //not already exist
-    return true;
+    return this.repo.findFriendByName(name) !== undefined;
+  }
+  checkIdExists(id: string) {
+    return this.repo.findFriendById(id) !== undefined;
   }
 
   addFriend(friend: Friend) {
     const sameDataExist = [];
-
-    if (friend.name) {
-      if (!this.checkNameExists(friend.name)) sameDataExist.push("name");
-    }
     if (friend.email) {
-      if (!this.checkEmailExists(friend.email)) {
+      if (this.checkEmailExists(friend.email)) {
         sameDataExist.push("email");
       }
     }
     if (friend.phone) {
-      if (!this.checkPhoneExists(friend.phone)) {
+      if (this.checkPhoneExists(friend.phone)) {
         sameDataExist.push("phone");
       }
     }
 
     // isemail is present ,is phnenumebr is present
-    if (!FriendsRepository.getInstance()) {
-      throw new DBconnection(
-        "Adding friend Failed: FriendsRepository not initialized. Ensure database connection is active.",
-      );
-    }
     if (sameDataExist.length !== 0) {
       throw new ConflictError(
         sameDataExist,
@@ -48,45 +40,51 @@ export class FriendsController {
       );
     }
 
-    console.log("Adding friend to database...", friend);
-    FriendsRepository.getInstance().addFriend(friend);
+    console.log("Adding friend to database...\n");
+    displayTable([friend]);
+    this.repo.addFriend(friend);
   }
 
   //searchcon
   searchFriend(input: string, pageOptions: PageOptions) {
-    if (!FriendsRepository.getInstance()) {
+    if (!this.repo) {
       throw new DBconnection(
         " Searching friend failed : FriendsRepository not initialized. Ensure database connection is active.",
       );
     }
     console.log("Searching friend in database...", input);
-    return FriendsRepository.getInstance().searchFriends(input, pageOptions);
+    return this.repo.searchFriends(input, pageOptions);
   }
 
   //update
   updateFriend(personIdOrName: string, updatedDetail?: Friend) {
-    if (!FriendsRepository.getInstance()) {
+    if (!this.repo) {
       throw new DBconnection(
         "Updating friend detail Failed : FriendsRepository not initialized. Ensure database connection is active.",
       );
     }
     console.log("Updating friend deatils in database...", personIdOrName);
-    return FriendsRepository.getInstance().updateFriend(
-      personIdOrName,
-      updatedDetail,
-    );
+    try {
+      return this.repo.updateFriend(personIdOrName, updatedDetail);
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        throw new ConflictError(err.conflictProperties, "Update failed");
+      }
+      throw err;
+    }
   }
 
   //remove
-  removeFriend(personIdOrName: string, forcible: boolean = false) {
-    if (!FriendsRepository.getInstance()) {
+  async removeFriend(id: string) {
+    if (!this.repo) {
       throw new DBconnection(
         "Deleting friend detail Failed : FriendsRepository not initialized. Ensure database connection is active.",
       );
     }
-    return FriendsRepository.getInstance().removeFriend(
-      personIdOrName,
-      forcible,
-    );
+    try {
+      return this.repo.removeFriend(id);
+    } catch (err) {
+      throw err;
+    }
   }
 }

@@ -3,7 +3,7 @@ import * as readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 
 export interface AskOptions {
-  defaultAnswer?: string | undefined;
+  defaultAnswer?: string | undefined | null;
   validator?: ValidatorFn | undefined;
 }
 
@@ -12,16 +12,12 @@ export interface Choice {
   value: string;
 }
 
-// const genders: Choice[] = [{ label: "Male", value: "M" }];
-
-// const expenseTypes: Choice[] = [{ label: "Food", value: "FOOD" }];
-
 export const openInterractionManager = () => {
   const rl = readline.createInterface({ input, output });
   const ask: (
     question: string,
     options?: AskOptions,
-  ) => Promise<undefined | string> = async (
+  ) => Promise<null | string> = async (
     question: string,
     options?: AskOptions,
   ) => {
@@ -34,7 +30,7 @@ export const openInterractionManager = () => {
             console.log("Invalid input");
             return resolve(ask(question, { defaultAnswer, validator }));
           }
-          resolve(answer || defaultAnswer);
+          resolve(answer || defaultAnswer!);
         },
       );
     });

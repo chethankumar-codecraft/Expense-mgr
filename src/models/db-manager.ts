@@ -9,7 +9,6 @@ interface AppData {
 export class AppDBManager {
   private constructor() {
     const dbPath = path.join(process.cwd(), "data", "data.json");
-    console.log("DB FILE PATH:", dbPath);
     this.db = new Database<AppData>(dbPath, new JsonStorageAdapter());
   }
   private static sharedInstance: AppDBManager | undefined = undefined;
