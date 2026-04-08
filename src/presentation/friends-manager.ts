@@ -7,7 +7,7 @@ import { numberValidator } from "../core/validators/number.validator.js";
 import { notEmpty } from "../core/validators/notemptyString.validator.js";
 import { ConflictError } from "../core/errors/conflict.error.js";
 import { DBconnection } from "../core/errors/DBconnection.error.js";
-import { displayTable } from "../core/consts/displayTable.js";
+import { displayTable } from "./displayTable.js";
 import { rangeValidator } from "../core/validators/range.validator.js";
 import { yesOrNo } from "../core/validators/yesOrNo.validator.js";
 const options: Choice[] = [
@@ -29,7 +29,6 @@ const addFriend = async () => {
     balance: null,
     address: "",
   };
-
   const showFriendForm = async () => {
     try {
       if (friendFormData.name === "") {
@@ -135,76 +134,108 @@ const searchFriend = async () => {
   }
 };
 
-const updateFriend = async () => {
-  const personIdOrName = await ask(`Enter the friend ID OR name to update: `, {
+export const updateFriend = async () => {
+  const input = await ask(`Enter the friend ID OR name to update: `, {
     validator: notEmpty,
   });
+  const matches = friendController.searchFriend(input!, {
+    offset: 0,
+    limit: 100,
+  });
+  if (!matches || matches.matched === 0) {
+    console.error("No friend found with that ID or name.");
+    return;
+  }
+  let selectedFriend: Friend;
+  if (matches.matched === 1) {
+    selectedFriend = matches.data[0]!;
+  } else {
+    console.log("Multiple friends found. Select the correct one:");
+    displayTable(matches.data);
+    const indexStr = await ask(
+      `Choose the friend by 'Entry' whom you want to update:`,
+      {
+        validator: rangeValidator(1, matches.matched),
+      },
+    );
+    const index = Number(indexStr) - 1; // 1-based table → 0-based array
+    selectedFriend = matches.data[index]!;
+  }
+  displayTable([selectedFriend]);
+  const formData: Friend = { ...selectedFriend };
 
-  const existingFriend = friendController.updateFriend(personIdOrName!); // just fetch
-
-  const formData: Friend = {
-    ...existingFriend,
-  };
-
-  const showUpdateForm = async () => {
+  // Function to ask only the conflicting fields
+  const showUpdateForm = async (
+    fieldsToAsk: (keyof Friend)[] = [
+      "name",
+      "email",
+      "phone",
+      "balance",
+      "address",
+    ],
+  ) => {
     try {
       console.log("Press Enter to keep old value:");
-
-      formData.name =
-        (await ask(`Enter friend's name :`, {
-          defaultAnswer: existingFriend.name,
-        })) || existingFriend.name;
-
-      formData.email =
-        (await ask(`Enter friend's email :`, {
-          validator: emailValidator,
-          defaultAnswer: existingFriend.email,
-        })) || existingFriend.email;
-
-      formData.phone =
-        (await ask(`Enter friend's phone number :`, {
-          validator: phoneValidator,
-          defaultAnswer: existingFriend.phone,
-        })) || existingFriend.phone;
-
-      if (formData.balance === null || formData.balance === undefined) {
+      if (fieldsToAsk.includes("name")) {
+        formData.name =
+          (await ask(`Enter friend's name:`, {
+            defaultAnswer: selectedFriend.name,
+          })) || selectedFriend.name;
+      }
+      if (fieldsToAsk.includes("email")) {
+        formData.email =
+          (await ask(`Enter friend's email:`, {
+            validator: emailValidator,
+            defaultAnswer: selectedFriend.email,
+          })) || selectedFriend.email;
+      }
+      if (fieldsToAsk.includes("phone")) {
+        formData.phone =
+          (await ask(`Enter friend's phone number:`, {
+            validator: phoneValidator,
+            defaultAnswer: selectedFriend.phone,
+          })) || selectedFriend.phone;
+      }
+      if (fieldsToAsk.includes("balance")) {
         formData.balance = Number(
-          (await ask(`Enter balance :`, {
+          (await ask(`Enter balance:`, {
             validator: numberValidator,
-            defaultAnswer: String(existingFriend.balance),
-          })) || existingFriend.balance,
+            defaultAnswer: String(selectedFriend.balance),
+          })) || selectedFriend.balance,
         );
       }
-
-      formData.address =
-        (await ask(`Enter address :`, {
-          defaultAnswer: existingFriend.address,
-        })) || existingFriend.address;
-      const result = friendController.updateFriend(personIdOrName!, formData);
-
-      console.log(`Updated ${result.name}`);
-      console.table(result);
-    } catch (err) {
-      if (err instanceof ConflictError) {
-        console.log(`${err.message}`);
-        console.log(`Conflict fields: ${err.conflictProperties.join(", ")}`);
-
-        err.conflictProperties.forEach((field) => {
-          if (field === "balance") {
-            formData.balance = null as any;
-          } else {
-            formData[field as keyof Friend] = "" as any;
-          }
-        });
-
-        return await showUpdateForm();
+      if (fieldsToAsk.includes("address")) {
+        formData.address =
+          (await ask(`Enter address:`, {
+            defaultAnswer: selectedFriend.address,
+          })) || selectedFriend.address;
+      }
+      const confirm = await ask(
+        `Are you sure you want to update ${selectedFriend.name}? (y/n):`,
+        { validator: yesOrNo },
+      );
+      if (confirm!.toLowerCase() !== "y") {
+        console.log("Update cancelled.");
+        return;
       }
 
-      console.error(err);
+      const result = friendController.updateFriend(selectedFriend.id, formData);
+      console.log(`\nSuccessfully updated ${result.name}:\n`);
+      displayTable([result]);
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        console.log(`\nConflict Error: ${err.message}`);
+        console.log(`Fields in conflict: ${err.conflictProperties.join(", ")}`);
+        // Retry only the conflicting fields
+        await showUpdateForm(err.conflictProperties as (keyof Friend)[]);
+      } else {
+        throw err;
+      }
     }
   };
 
-  return await showUpdateForm();
+  // Run the update form
+  await showUpdateForm();
 };
 
 export const removeFriend = async () => {
@@ -237,6 +268,7 @@ export const removeFriend = async () => {
     const index = Number(indexStr) - 1; // subtract 1 because table shows 1-based index
     selectedFriend = matches.data[index]!;
   }
+  displayTable([selectedFriend]);
   console.log(`${selectedFriend.name}'s Balance: ${selectedFriend.balance}`);
   if (selectedFriend.balance === 0)
     console.log(`No transaction is pending with this freind`);

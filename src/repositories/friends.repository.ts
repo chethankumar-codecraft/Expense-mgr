@@ -1,7 +1,6 @@
 import type { Friend } from "../models/friend.model.js";
 import type { PageOptions, PageResult } from "../core/pagination.types.js";
 import { AppDBManager } from "../models/db-manager.js";
-import { ConflictError } from "../core/errors/conflict.error.js";
 import { DBconnection } from "../core/errors/DBconnection.error.js";
 
 export class FriendsRepository {
@@ -73,48 +72,11 @@ export class FriendsRepository {
     };
   }
 
-  updateFriend(personIdOrName: string, updatedDetails?: Friend) {
-    const friendObj =
-      this.findFriendById(personIdOrName) ||
-      this.findFriendByName(personIdOrName);
-    if (!friendObj) {
-      throw new ConflictError(["personIdOrName"], `Friend not found`);
-    }
-    if (!updatedDetails) return friendObj;
-
-    const sameDataExist: string[] = [];
-
-    if (updatedDetails.name) {
-      const exists = this.friends.find(
-        (f) => f.name === updatedDetails.name && f.id !== friendObj.id, // exclude self
-      );
-      if (exists) sameDataExist.push("name");
-    }
-    if (updatedDetails.email) {
-      const exists = this.friends.find(
-        (f) => f.email === updatedDetails.email && f.id !== friendObj.id,
-      );
-      if (exists) sameDataExist.push("email");
-    }
-
-    if (updatedDetails.phone) {
-      const exists = this.friends.find(
-        (f) => f.phone === updatedDetails.phone && f.id !== friendObj.id,
-      );
-      if (exists) sameDataExist.push("phone");
-    }
-    if (sameDataExist.length !== 0) {
-      throw new ConflictError(
-        sameDataExist,
-        "User already exists with these properties",
-      );
-    }
-
+  updateFriend(friendObj: Friend, updatedDetails: Friend) {
     if (!updatedDetails) return friendObj;
     friendObj.name = updatedDetails.name;
     friendObj.balance = updatedDetails.balance;
     friendObj.email = updatedDetails.email;
-    friendObj.id = updatedDetails.id;
     friendObj.phone = updatedDetails.phone;
     AppDBManager.getInstance().save();
     return friendObj;

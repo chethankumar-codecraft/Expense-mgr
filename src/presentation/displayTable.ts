@@ -7,12 +7,10 @@ export function displayTable<T extends Record<string, any>>(
     return;
   }
 
-  // 👇 if fields not provided → take all keys from first object
   const finalFields =
     fields && fields.length ? fields : (Object.keys(data[0]!) as (keyof T)[]);
 
-  // Add index column at start
-  const headers = ["#", ...finalFields.map((f) => String(f))];
+  const headers = ["#Entry", ...finalFields.map((f) => String(f))];
 
   const rows = data.map((item, idx) => [
     String(idx + 1),
@@ -40,10 +38,10 @@ export function displayTable<T extends Record<string, any>>(
     );
   };
 
-  console.log("\n\n", createBorder());
+  console.log(`\n${createBorder()}`);
   printRow(headers);
   console.log(createBorder());
   rows.forEach(printRow);
   console.log(createBorder());
-  console.log("\n\n");
+  console.log("\n");
 }

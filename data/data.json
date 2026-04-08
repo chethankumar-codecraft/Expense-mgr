@@ -1,14 +1,6 @@
 {
   "friends": [
     {
-      "id": "1775539963341",
-      "name": "Chethan",
-      "email": "c@gmail.com",
-      "phone": "1111111111",
-      "balance": 0,
-      "address": "mangalore"
-    },
-    {
       "id": "1775539983280",
       "name": "Pradeep",
       "email": "p@gmail.com",
@@ -18,43 +10,11 @@
     },
     {
       "id": "1775540053488",
-      "name": "Codecraft",
+      "name": "Dee",
       "email": "code@gmail.com",
       "phone": "7777777777",
       "balance": 90,
       "address": "bangalore"
-    },
-    {
-      "id": "1775548274471",
-      "name": "d",
-      "email": null,
-      "phone": null,
-      "balance": 0,
-      "address": null
-    },
-    {
-      "id": "1775550024882",
-      "name": "s",
-      "email": null,
-      "phone": null,
-      "balance": 0,
-      "address": null
-    },
-    {
-      "id": "1775550861310",
-      "name": "w",
-      "email": null,
-      "phone": null,
-      "balance": 0,
-      "address": null
-    },
-    {
-      "id": "1775551093370",
-      "name": "d",
-      "email": null,
-      "phone": null,
-      "balance": 0,
-      "address": null
     },
     {
       "id": "1775551134418",
@@ -65,20 +25,44 @@
       "address": null
     },
     {
-      "id": "1775551220274",
-      "name": "3",
-      "email": null,
-      "phone": null,
-      "balance": 0,
-      "address": null
-    },
-    {
       "id": "1775564445072",
-      "name": "CK",
+      "name": "Manish",
       "email": "s@gmail.com",
       "phone": "1234567890",
       "balance": 0,
       "address": "s"
+    },
+    {
+      "id": "1775623068260",
+      "name": "Deekshit",
+      "email": "d@gmail.com",
+      "phone": "2345432345",
+      "balance": 0,
+      "address": null
+    },
+    {
+      "id": "1775627699284",
+      "name": "Rajesh",
+      "email": "hg@gmail.com",
+      "phone": "3456598765",
+      "balance": 78,
+      "address": "mangalore"
+    },
+    {
+      "id": "1775629314815",
+      "name": "Chethan Kumar",
+      "email": "fg@gmail.com",
+      "phone": "1235676554",
+      "balance": 87,
+      "address": "mangalore"
+    },
+    {
+      "id": "1775723124084",
+      "name": "x",
+      "email": null,
+      "phone": null,
+      "balance": 0,
+      "address": null
     }
   ]
 }
