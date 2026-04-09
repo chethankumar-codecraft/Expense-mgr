@@ -1,76 +1,84 @@
 import type { Friend } from "../models/friend.model.js";
 import { FriendsRepository } from "../repositories/friends.repository.js";
 import { type PageOptions } from "../core/pagination.types.js";
+import { ConflictError } from "../core/errors/conflict.error.js";
 export class FriendsController {
+  private repo = FriendsRepository.getInstance();
   checkEmailExists(email: string) {
-    if (FriendsRepository.getInstance().findFriendByEmail(email)) return false; //not already exist
-    return true;
+    return this.repo.findFriendByEmail(email) !== undefined;
   }
-
   checkPhoneExists(phone: string) {
-    if (FriendsRepository.getInstance().findFriendByPhone(phone)) return false; //not already exist
-    return true;
+    return this.repo.findFriendByPhone(phone) !== undefined;
+  }
+  checkNameExists(name: string) {
+    return this.repo.findFriendByName(name) !== undefined;
+  }
+  checkIdExists(id: string) {
+    return this.repo.findFriendById(id) !== undefined;
   }
 
   addFriend(friend: Friend) {
+    const sameDataExist = [];
     if (friend.email) {
-      if (!this.checkEmailExists(friend.email)) {
-        console.log(
-          `Friend with email${friend.email} is already exist in your friend list`,
-        );
-        return;
+      if (this.checkEmailExists(friend.email)) {
+        sameDataExist.push("email");
       }
     }
     if (friend.phone) {
-      if (!this.checkPhoneExists(friend.phone)) {
-        console.log(
-          `Friend with phone number${friend.phone} is already exist in your friend list`,
-        );
-        return;
+      if (this.checkPhoneExists(friend.phone)) {
+        sameDataExist.push("phone");
       }
     }
 
-    // isemail is present ,is phnenumebr is present
-    if (!FriendsRepository.getInstance()) {
-      console.log("Adding friend Failed");
-      return;
+    if (sameDataExist.length !== 0) {
+      throw new ConflictError(
+        sameDataExist,
+        "User already exist in these property",
+      );
     }
-    console.log("Adding friend to database...", friend);
-    FriendsRepository.getInstance().addFriend(friend);
+
+    console.log("Adding friend to database...\n");
+    this.repo.addFriend(friend);
   }
 
-  //search
+  //searchcon
   searchFriend(input: string, pageOptions: PageOptions) {
-    if (!FriendsRepository.getInstance()) {
-      console.log("Searching friend Failed");
-      return;
-    }
     console.log("Searching friend in database...", input);
-    return FriendsRepository.getInstance().searchFriends(input, pageOptions);
+    return this.repo.searchFriends(input, pageOptions);
   }
 
   //update
-  updateFriend(personIdOrName: string, updatedDetail?: Friend) {
-    if (!FriendsRepository.getInstance()) {
-      console.log("Updating friend detail Failed");
-      return;
+  updateFriend(id: string, updatedDetail: Friend) {
+    console.log("Updating friend deatils in database...", id);
+    const friendObj = this.repo.findFriendById(id);
+    if (!friendObj) {
+      throw new ConflictError(["personIdOrName"], `Friend not found`);
     }
-    console.log("Updating friend deatils in database...", personIdOrName);
-    return FriendsRepository.getInstance().updateFriend(
-      personIdOrName,
-      updatedDetail,
-    );
+    const conflicts: string[] = [];
+
+    if (
+      updatedDetail.email &&
+      this.checkEmailExists(updatedDetail.email) &&
+      updatedDetail.email !== friendObj.email
+    ) {
+      conflicts.push("email");
+    }
+    if (
+      updatedDetail.phone &&
+      this.checkPhoneExists(updatedDetail.phone) &&
+      updatedDetail.phone !== friendObj.phone
+    ) {
+      conflicts.push("phone");
+    }
+
+    if (conflicts.length > 0) {
+      throw new ConflictError(conflicts, "These fields already exist");
+    }
+    return this.repo.updateFriend(friendObj, updatedDetail);
   }
 
   //remove
-  removeFriend(personIdOrName: string, forcible: boolean = false) {
-    if (!FriendsRepository.getInstance()) {
-      console.log("Updating friend detail Failed");
-      return;
-    }
-    return FriendsRepository.getInstance().removeFriend(
-      personIdOrName,
-      forcible,
-    );
+  async removeFriend(id: string) {
+    return this.repo.removeFriend(id);
   }
 }

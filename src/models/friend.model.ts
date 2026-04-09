@@ -1,7 +1,10 @@
-export interface Friend {
+import type { Row } from "../core/storage/db.js";
+
+export interface Friend extends Row {
   id: string;
   name: string;
-  email: string |undefined;
-  phone: string|undefined;
-  balance: number; //+ve means they owe you, -ve means you owe them
+  email: string | null;
+  phone: string | null;
+  balance: number | null;
+  address: string | null;
 }

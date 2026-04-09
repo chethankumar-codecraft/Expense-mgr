@@ -1,5 +1,8 @@
 import type { Friend } from "../models/friend.model.js";
 import type { PageOptions, PageResult } from "../core/pagination.types.js";
+import { AppDBManager } from "../models/db-manager.js";
+import { DBconnection } from "../core/errors/DBconnection.error.js";
+
 export class FriendsRepository {
   private static instance: FriendsRepository;
   private friends: Friend[] = [];
@@ -11,11 +14,12 @@ export class FriendsRepository {
     return FriendsRepository.instance;
   }
 
-  private constructor() {}
-
-  addFriend(friend: Friend) {
-    this.friends.push(friend);
-    console.log("Friend added to repository");
+  private constructor() {
+    const db = AppDBManager.getInstance().getDB();
+    if (!db) {
+      throw new DBconnection("DB not initialized");
+    }
+    this.friends = db.table("friends") as Friend[];
   }
 
   findFriendByEmail(email: string) {
@@ -29,6 +33,20 @@ export class FriendsRepository {
   }
   findFriendByName(name: string) {
     return this.friends.find((friend) => friend.name === name);
+  }
+
+  addFriend(friend: Friend) {
+    try {
+      this.friends.push(friend);
+      AppDBManager.getInstance().save();
+      console.log(
+        `${friend.name} is successffully added to  friends repository`,
+      );
+    } catch (err) {
+      throw new DBconnection(
+        "Adding friend Failed: FriendsRepository not initialized. Ensure database connection is active.",
+      );
+    }
   }
 
   searchFriends(query: string, pageOptions?: PageOptions): PageResult<Friend> {
@@ -54,42 +72,21 @@ export class FriendsRepository {
     };
   }
 
-  updateFriend(personIdOrName: string, updatedDetails?: Friend) {
-    const friendObj =
-      this.findFriendById(personIdOrName) ||
-      this.findFriendByName(personIdOrName);
-    if (!friendObj) {
-      console.log(
-        `Friend with id or Name ${personIdOrName} not exist in the friend list`,
-      );
-      return;
-    }
+  updateFriend(friendObj: Friend, updatedDetails: Friend) {
     if (!updatedDetails) return friendObj;
     friendObj.name = updatedDetails.name;
     friendObj.balance = updatedDetails.balance;
     friendObj.email = updatedDetails.email;
-    friendObj.id = updatedDetails.id;
     friendObj.phone = updatedDetails.phone;
+    AppDBManager.getInstance().save();
     return friendObj;
   }
 
-  removeFriend(personIdOrName: string, forcible: boolean) {
-    const removePerson =
-      this.findFriendById(personIdOrName) ||
-      this.findFriendByName(personIdOrName);
-    if (!removePerson) {
-      console.log(
-        `Friend with id or Name ${personIdOrName} not exist in the friend list`,
-      );
-      return;
-    }
-    if (removePerson.balance !== 0 && !forcible) {
-      console.log(`You cannot delete this person before settlement`);
-    } else {
-      this.friends = this.friends.filter((friend) => {
-        return friend.id !== personIdOrName && friend.name !== personIdOrName;
-      });
-    }
-    return removePerson;
+  removeFriend(id: string) {
+    const index = this.friends.findIndex((f) => f.id === id);
+    if (index === -1) return;
+    const [removedPerson] = this.friends.splice(index, 1);
+    AppDBManager.getInstance().save();
+    return removedPerson;
   }
 }
